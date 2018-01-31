@@ -10,9 +10,9 @@ import MediaPlayer
 
 class ViewController: UIViewController, MPMediaPickerControllerDelegate {
     
-    let mp = MPMusicPlayerController.systemMusicPlayer()
+    let mp = MPMusicPlayerController.systemMusicPlayer
     
-    var timer = NSTimer()
+    var timer = Timer()
     
     var mediapicker1: MPMediaPickerController!
     
@@ -29,16 +29,16 @@ class ViewController: UIViewController, MPMediaPickerControllerDelegate {
         //calls timer and related functions when view is first loaded to avoiding waiting for playback change notificaitons
         mp.prepareToPlay()
         
-        self.timer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(ViewController.timerFired(_:)), userInfo: nil, repeats: true)
+        self.timer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(ViewController.timerFired(_:)), userInfo: nil, repeats: true)
         self.timer.tolerance = 0.1
         
         // Add a notification observer for MPMusicPlayerControllerNowPlayingItemDidChangeNotification that fires a method when the track changes (to update track info label)
         mp.beginGeneratingPlaybackNotifications()
         
-        NSNotificationCenter.defaultCenter().addObserver(self, selector:#selector(ViewController.updateNowPlayingInfo), name: MPMusicPlayerControllerNowPlayingItemDidChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector:#selector(ViewController.updateNowPlayingInfo), name: NSNotification.Name.MPMusicPlayerControllerNowPlayingItemDidChange, object: nil)
         
         //Declare media picker for later display
-        let mediaPicker: MPMediaPickerController = MPMediaPickerController.self(mediaTypes:MPMediaType.Music)
+        let mediaPicker: MPMediaPickerController = MPMediaPickerController.self(mediaTypes:MPMediaType.music)
         mediaPicker.allowsPickingMultipleItems = true
         mediapicker1 = mediaPicker
         mediaPicker.delegate = self
@@ -47,10 +47,10 @@ class ViewController: UIViewController, MPMediaPickerControllerDelegate {
     }
     
     //Function to pull track info and update labels
-    func timerFired(_:AnyObject) {
+    @objc func timerFired(_:AnyObject) {
     
         //Ensure the track exists before pulling the info
-        if let currentTrack = MPMusicPlayerController.systemMusicPlayer().nowPlayingItem {
+        if let currentTrack = MPMusicPlayerController.systemMusicPlayer.nowPlayingItem {
         
             //pull artist and title for current track and show in labelTitle
             let trackName = currentTrack.title!
@@ -60,7 +60,7 @@ class ViewController: UIViewController, MPMediaPickerControllerDelegate {
             labelTitle.text = "\(trackArtist) - \(trackName)"
             
             //set image to Album Artwork
-            let albumImage = currentTrack.artwork?.imageWithSize(imageAlbum.bounds.size)
+            let albumImage = currentTrack.artwork?.image(at: imageAlbum.bounds.size)
             
             imageAlbum.image = albumImage
             
@@ -72,7 +72,7 @@ class ViewController: UIViewController, MPMediaPickerControllerDelegate {
             let trackDurationMinutes = Int(trackDuration / 60)
             
             //Find the remainder from the previous equation. 245 / 60 is 4 with a remainder of 5. This results in 5
-            let trackDurationSeconds = Int(trackDuration % 60)
+            let trackDurationSeconds = Int(trackDuration.truncatingRemainder(dividingBy:60))
             
             //Create the lable for the length of the song. BUT a 4 minute long song with a 5 second remainder would show as "4:5" so..
             if trackDurationSeconds < 10 {
@@ -98,7 +98,7 @@ class ViewController: UIViewController, MPMediaPickerControllerDelegate {
             //Repeat same steps to display the elapsed time as we did with the duration
             let trackElapsedMinutes = Int(trackElapsed / 60)
             
-            let trackElapsedSeconds = Int(trackElapsed % 60)
+            let trackElapsedSeconds = Int(trackElapsed.truncatingRemainder(dividingBy:60))
             
             if trackElapsedSeconds < 10 {
                 
@@ -135,16 +135,16 @@ class ViewController: UIViewController, MPMediaPickerControllerDelegate {
     }
     
     // Create function to change labels to current track info based on previous notification observer
-    func updateNowPlayingInfo(){
+    @objc func updateNowPlayingInfo(){
         
-        self.timer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(ViewController.timerFired(_:)), userInfo: nil, repeats: true)
+        self.timer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(ViewController.timerFired(_:)), userInfo: nil, repeats: true)
         self.timer.tolerance = 0.1
         
     }
     
     //Function to make adjusting the slider move through the song.
     @IBAction func sliderTimeChanged(sender: AnyObject) {
-        mp.currentPlaybackTime = NSTimeInterval(sliderTime.value)
+        mp.currentPlaybackTime = TimeInterval(sliderTime.value)
     }
     
     //Button functions -- I'm pretty sure these are self explanatory enough
@@ -171,15 +171,15 @@ class ViewController: UIViewController, MPMediaPickerControllerDelegate {
     
     //Display the user's internal iPod library
     @IBAction func buttonPick(sender: AnyObject) {
-        self.presentViewController(mediapicker1, animated: true, completion: nil)
+        self.present(mediapicker1, animated: true, completion: nil)
     }
     
     //
     func mediaPicker(mediaPicker: MPMediaPickerController, didPickMediaItems mediaItemCollection: MPMediaItemCollection) {
-        self.dismissViewControllerAnimated(true, completion: nil)
+        self.dismiss(animated: true, completion: nil)
         let selectedSongs = mediaItemCollection
         
-        mp.setQueueWithItemCollection(selectedSongs)
+        mp.setQueue(with: selectedSongs)
         mp.play()
     }
 

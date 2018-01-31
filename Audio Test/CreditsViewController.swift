@@ -16,8 +16,8 @@ class CreditsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        if let url  = NSURL(string: "http://justindoan.com/muhFace.png"),
-            data = NSData(contentsOfURL: url)
+        if let url  = URL(string: "http://justindoan.com/muhFace.png"),
+            let data = try? Data(contentsOf: url)
         {
             image.image = UIImage(data: data)
         }
